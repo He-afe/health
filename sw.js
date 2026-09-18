@@ -13,7 +13,7 @@
    （v1 → v2 → v3……），否则父母的手机上不会更新。
    ========================================================================== */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `health-diary-${CACHE_VERSION}`;
 
 // 需要预先缓存的全部文件。新增 js 文件时要记得加进来——
@@ -35,6 +35,7 @@ const PRECACHE = [
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
   './icons/favicon-32.png',
 ];
 

@@ -206,16 +206,85 @@ function todayCards(records, lastHba1c) {
    横幅 —— 按优先级只显示一条
    ------------------------------------------------------------------------- */
 
+/**
+ * 粗略判断平台，只用来决定显示哪一套安装说明。
+ * 两边的入口完全不一样：iPhone 在 Safari 的分享菜单里，
+ * 安卓在浏览器右上角的菜单里——给安卓用户看 iPhone 的说明，
+ * 他们会照着找半天然后找不到"底部中间的分享按钮"。
+ */
+function platform() {
+  const ua = navigator.userAgent || '';
+  // iPadOS 13 以后 Safari 会把自己伪装成 macOS，只能靠触摸点数认出来
+  const iPadOS = /Macintosh/.test(ua) && navigator.maxTouchPoints > 1;
+  if (/iPhone|iPad|iPod/.test(ua) || iPadOS) return 'ios';
+  if (/Android|HarmonyOS/.test(ua)) return 'android';
+  return 'other';
+}
+
+// 安卓 Chrome 会抛这个事件，拿到之后就能由应用自己触发安装，
+// 比让用户去翻浏览器菜单省事得多。iOS 没有对应机制。
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstall = e;
+});
+
 function installBanner() {
-  return el('div', { class: 'alert alert-info', style: { display: 'block' } },
-    el('div', { class: 'alert-mark', text: '📱 请先添加到主屏幕', style: { fontWeight: '700', marginBottom: '8px' } }),
-    el('div', { style: { fontWeight: '400', lineHeight: '1.7' } },
-      '这一步不能省。只有在主屏幕上的应用，记录才不会被 iPhone 自动清理掉。',
-      el('div', { style: { marginTop: '10px' } },
-        el('div', { text: '1. 点屏幕底部中间的「分享」按钮 ⬆️' }),
-        el('div', { text: '2. 在列表里往下滑，点「添加到主屏幕」' }),
-        el('div', { text: '3. 点右上角的「添加」' }),
+  const p = platform();
+
+  if (p === 'android') {
+    const btn = el('button', {
+      type: 'button',
+      class: 'btn-primary btn-block',
+      text: '一键安装到桌面',
+      style: { minHeight: '60px', fontSize: '21px', marginTop: '14px' },
+      onclick: async () => {
+        if (!deferredInstall) {
+          await alertDialog('请点浏览器右上角的三个点 ⋮，选「安装应用」或「添加到主屏幕」。');
+          return;
+        }
+        deferredInstall.prompt();
+        const choice = await deferredInstall.userChoice;
+        deferredInstall = null;
+        if (choice?.outcome === 'accepted') await refresh();
+      },
+    });
+
+    return el('div', { class: 'alert alert-info', style: { display: 'block' } },
+      el('div', { class: 'alert-mark', text: '📱 请先安装到桌面', style: { fontWeight: '700', marginBottom: '8px' } }),
+      el('div', { style: { fontWeight: '400', lineHeight: '1.7' } },
+        // 安卓没有 iOS 那条 7 天清理规则，所以不吓唬人，如实说好处就行
+        '安装后可以全屏使用、断网也能记，数据也更不容易被浏览器清掉。',
+        el('div', { style: { marginTop: '10px' } },
+          el('div', { text: '1. 点浏览器右上角的三个点 ⋮' }),
+          el('div', { text: '2. 选「安装应用」或「添加到主屏幕」' }),
+          el('div', { text: '3. 确认安装' }),
+        ),
       ),
+      btn,
+    );
+  }
+
+  if (p === 'ios') {
+    return el('div', { class: 'alert alert-info', style: { display: 'block' } },
+      el('div', { class: 'alert-mark', text: '📱 请先添加到主屏幕', style: { fontWeight: '700', marginBottom: '8px' } }),
+      el('div', { style: { fontWeight: '400', lineHeight: '1.7' } },
+        '这一步不能省。只有在主屏幕上的应用，记录才不会被 iPhone 自动清理掉。',
+        el('div', { style: { marginTop: '10px' } },
+          el('div', { text: '1. 点屏幕底部中间的「分享」按钮 ⬆️' }),
+          el('div', { text: '2. 在列表里往下滑，点「添加到主屏幕」' }),
+          el('div', { text: '3. 点右上角的「添加」' }),
+        ),
+      ),
+    );
+  }
+
+  // 电脑浏览器：这里没东西可装，说明清楚就行，免得白折腾
+  return el('div', { class: 'alert alert-info', style: { display: 'block' } },
+    el('div', { class: 'alert-mark', text: '📱 请用手机打开', style: { fontWeight: '700', marginBottom: '8px' } }),
+    el('div', { style: { fontWeight: '400', lineHeight: '1.7' } },
+      '这是给手机用的。用 iPhone 的 Safari、或安卓的 Chrome 打开这个网址，'
+      + '再「添加到主屏幕」，就能像 App 一样全屏使用、断网也能记。',
     ),
   );
 }

@@ -1,0 +1,604 @@
+/* ==========================================================================
+   健康日记 — 样式
+   设计前提：使用者是老年用户。字号、对比度、点击区域都按这个前提定，
+   不按"信息密度"定。改动这里的数值时请记住这条。
+   ========================================================================== */
+
+:root {
+  /* 字号：基准 19px 而不是常见的 16px，数字再单独放大到 40px */
+  --fs-base: 19px;
+  --fs-sm: 17px;
+  --fs-lg: 22px;
+  --fs-xl: 26px;
+  --fs-num: 40px;
+
+  --ink: #14181a;
+  --muted: #59646a;
+  --bg: #eef1f2;
+  --card: #fff;
+  --line: #d5dcdf;
+
+  --brand: #0f6f75;
+  --brand-ink: #0b5459;
+  --brand-wash: #e2f0f1;
+
+  --ok: #17744a;
+  --ok-wash: #e4f3ea;
+  --warn: #a85a00;
+  --warn-wash: #fdf0dd;
+  --danger: #b3261e;
+  --danger-wash: #fdeceb;
+
+  /* 最小点击区域。56 是底线，主操作按钮更高。 */
+  --tap: 56px;
+
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(0, 0, 0, .07), 0 6px 16px rgba(0, 0, 0, .05);
+}
+
+* { box-sizing: border-box; }
+
+/* hidden 属性自带的 display:none 来自浏览器默认样式表，优先级是全场最低的。
+   下面 .sheet / .saved / .dialog-wrap 都写了 display:flex，
+   会把 hidden 直接盖掉——结果是录入表单、保存提示、确认框同时糊在屏幕上。
+   这一条是必需的，不是保险。 */
+[hidden] { display: none !important; }
+
+html {
+  /* 不加这条的话 iOS 横屏时会自己放大正文字号 */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-size: var(--fs-base);
+  line-height: 1.5;
+  color: var(--ink);
+  /* 优先用系统中文黑体，比默认宋体清晰得多 */
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  /* 关掉橡皮筋回弹，避免父母滑动时页面跟着晃 */
+  overscroll-behavior-y: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 老年人更容易误触，全局禁用文本选择，避免长按弹出选择菜单 */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+}
+input, textarea { -webkit-user-select: text; user-select: text; }
+
+/* ---------- 顶部标题栏 ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: calc(env(safe-area-inset-top) + 12px) 18px 14px;
+  background: var(--brand);
+  color: #fff;
+}
+.topbar h1 {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 700;
+}
+.topbar-sub {
+  margin: 3px 0 0;
+  font-size: var(--fs-sm);
+  opacity: .92;
+  min-height: 1.4em;   /* 占位，避免有无副标题时内容跳动 */
+}
+
+main {
+  padding: 14px 14px calc(env(safe-area-inset-bottom) + 92px);
+}
+.view > * + * { margin-top: 14px; }
+
+/* ---------- 底部标签栏 ---------- */
+.tabbar {
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
+  z-index: 30;
+  display: flex;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-height: 60px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.tab svg { width: 27px; height: 27px; fill: currentColor; }
+.tab.is-on { color: var(--brand); font-weight: 700; }
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+.card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.card-title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+.card-when {
+  font-size: var(--fs-sm);
+  color: var(--muted);
+}
+
+/* 卡片主数值 */
+.metric-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 22px;
+}
+.metric { display: flex; align-items: baseline; gap: 6px; }
+.metric-num {
+  font-size: var(--fs-num);
+  font-weight: 700;
+  line-height: 1.1;
+  /* 数字等宽，父母读数时不会因字宽跳动 */
+  font-variant-numeric: tabular-nums;
+}
+.metric-num.sm { font-size: var(--fs-xl); }
+.metric-unit { font-size: var(--fs-base); color: var(--muted); }
+.metric-label { font-size: var(--fs-sm); color: var(--muted); }
+
+/* 未记录状态 */
+.empty-note {
+  font-size: var(--fs-lg);
+  color: var(--muted);
+  padding: 4px 0 2px;
+}
+
+/* 今日概览里的血糖小圆片 */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  background: var(--brand-wash);
+  border-radius: 999px;
+  padding: 7px 14px;
+}
+.chip-tag { font-size: var(--fs-sm); color: var(--brand-ink); }
+.chip-val {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 按钮 ---------- */
+button {
+  font-family: inherit;
+  /* 去掉双击缩放和 300ms 点击延迟。老人点击偏慢，很容易被系统当成双击。 */
+  touch-action: manipulation;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-plain,
+.btn-text {
+  min-height: var(--tap);
+  border-radius: 12px;
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  cursor: pointer;
+  border: 0;
+}
+.btn-primary { background: var(--brand); color: #fff; padding: 0 22px; }
+.btn-primary:active { background: var(--brand-ink); }
+.btn-secondary {
+  background: var(--brand-wash);
+  color: var(--brand-ink);
+  padding: 0 22px;
+  border: 2px solid var(--brand);
+}
+.btn-danger { background: var(--danger); color: #fff; padding: 0 22px; }
+.btn-plain {
+  background: #eceff0;
+  color: var(--ink);
+  padding: 0 22px;
+  font-weight: 600;
+}
+.btn-text {
+  min-height: 40px;
+  background: none;
+  color: var(--brand);
+  font-weight: 600;
+  font-size: var(--fs-base);
+  padding: 0 6px;
+}
+.btn-xl { min-height: 64px; width: 100%; font-size: var(--fs-xl); }
+.btn-block { width: 100%; }
+
+/* 卡片右上角的"记一笔" */
+.card-actions { margin-top: 14px; display: flex; gap: 10px; }
+.card-actions .btn-secondary { flex: 1; min-height: 52px; }
+
+/* ---------- 提醒条 ---------- */
+.alert {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  font-size: var(--fs-base);
+  font-weight: 600;
+}
+.alert-warn { background: var(--warn-wash); color: var(--warn); }
+.alert-danger { background: var(--danger-wash); color: var(--danger); }
+.alert-info { background: var(--brand-wash); color: var(--brand-ink); }
+.alert-mark { font-size: 22px; line-height: 1.2; }
+
+/* ---------- 分段控件 ---------- */
+.segmented {
+  display: flex;
+  gap: 6px;
+  background: #dfe4e6;
+  border-radius: 12px;
+  padding: 5px;
+}
+.seg-btn {
+  flex: 1;
+  min-height: 48px;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  cursor: pointer;
+}
+.seg-btn.is-on { background: #fff; color: var(--brand-ink); font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,.14); }
+
+.section-title {
+  margin: 22px 0 10px;
+  font-size: var(--fs-lg);
+}
+
+/* ---------- 图表 ---------- */
+.chart-card { padding: 16px 12px 12px; }
+.chart-summary {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  padding: 0 4px 10px;
+  color: var(--ink);
+}
+.chart-summary .flag-warn { color: var(--warn); }
+.chart-summary .flag-danger { color: var(--danger); }
+.chart-summary .flag-ok { color: var(--ok); }
+.chart-host { width: 100%; }
+.chart-host svg { display: block; width: 100%; height: auto; }
+.chart-note { font-size: 15px; color: var(--muted); padding: 8px 4px 0; line-height: 1.6; }
+
+/* 点选读数。老人很难精确点中一个 4px 的圆点，
+   所以点图里任意位置都会取最近的点，把读数用大字显示在这里。 */
+.chart-readout {
+  margin: 0 4px 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: var(--brand-wash);
+  color: var(--brand-ink);
+  font-size: var(--fs-base);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 两条线以上的图必须有图例：不能让颜色成为唯一的区分方式 */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  padding: 0 4px 8px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: var(--fs-sm);
+  color: var(--ink);
+}
+.legend-swatch {
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  flex: none;
+}
+
+/* ---------- 记录列表 ---------- */
+.rec {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  border: 0;
+  font: inherit;
+  color: inherit;
+}
+.rec-icon { font-size: 26px; flex: none; }
+.rec-main { flex: 1; min-width: 0; }
+.rec-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.rec-val {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.rec-unit { font-size: var(--fs-sm); color: var(--muted); }
+.rec-sub { font-size: var(--fs-sm); color: var(--muted); margin-top: 2px; display: block; }
+.rec-when {
+  flex: none;
+  font-size: 15px;
+  color: var(--muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 对照目标的标记。措辞是事实性的"高于目标/在目标内"，
+   配色也跟着克制，不用大红大绿去制造焦虑。 */
+.rec-flag {
+  font-size: 14px;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+.lv-ok   { background: var(--ok-wash);     color: var(--ok); }
+.lv-high { background: var(--warn-wash);   color: var(--warn); }
+.lv-low  { background: var(--danger-wash); color: var(--danger); }
+
+/* ---------- 设置页 ---------- */
+.set-group { margin-bottom: 22px; }
+.set-group > h2 { margin: 0 0 10px; font-size: var(--fs-lg); }
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  min-height: var(--tap);
+  padding: 12px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+}
+.set-row:first-of-type { border-radius: var(--radius) var(--radius) 0 0; }
+.set-row:last-of-type { border-bottom: 0; border-radius: 0 0 var(--radius) var(--radius); }
+.set-row:only-of-type { border-radius: var(--radius); }
+.set-label { font-size: var(--fs-base); }
+.set-hint { font-size: 15px; color: var(--muted); margin-top: 2px; }
+.set-value { color: var(--muted); font-variant-numeric: tabular-nums; }
+.set-note {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.65;
+  padding: 10px 4px 0;
+}
+.set-value.is-ok { color: var(--ok); font-weight: 700; }
+.set-value.is-warn { color: var(--warn); font-weight: 700; }
+
+/* 目标值编辑行：左边标签、右边一个窄输入框 */
+.set-row-edit { align-items: center; }
+.set-input {
+  flex: none;
+  width: 5.5em;
+  min-height: 52px;
+  padding: 6px 10px;
+  font-size: var(--fs-lg);
+  text-align: right;
+}
+
+/* ---------- 录入表单 ---------- */
+.sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  /* 键盘弹出时 iOS 只缩小 visual viewport，不会缩小布局视口，
+     所以 bottom:0 的固定元素会被键盘整个盖住——包括保存按钮。
+     forms.js 会用 visualViewport.height 直接写 height 覆盖掉这里的 inset。
+     注意：绝对定位元素同时设 top 和 height 时 bottom 会被忽略，正好是我们要的。 */
+}
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: calc(env(safe-area-inset-top) + 8px) 12px 8px;
+  background: var(--brand);
+  color: #fff;
+}
+.sheet-head h2 { margin: 0; font-size: var(--fs-lg); }
+.sheet-head .btn-text { color: #fff; }
+.sheet-head-spacer { width: 56px; }
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px 14px 20px;
+}
+.sheet-foot {
+  /* 编辑已有记录时会多出一个"删除这条记录"按钮，纵向排开 */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px calc(env(safe-area-inset-bottom) + 12px);
+  background: #fff;
+  border-top: 1px solid var(--line);
+}
+.btn-delete-rec {
+  min-height: 52px;
+  color: var(--danger);
+  background: var(--danger-wash);
+  font-size: var(--fs-base);
+}
+.sheet-body { flex: 1 1 auto; min-height: 0; }
+
+.field { margin-bottom: 20px; }
+.field-label {
+  display: block;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.field-row { display: flex; align-items: center; gap: 10px; }
+.field-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 60px;
+  padding: 8px 16px;
+  /* 必须 ≥16px，否则 iOS 聚焦时会自动放大整个页面 */
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: #fff;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.field-input:focus { outline: none; border-color: var(--brand); }
+.field-input.is-bad { border-color: var(--danger); background: var(--danger-wash); }
+.field-unit { font-size: var(--fs-base); color: var(--muted); min-width: 3.5em; }
+
+/* 时点、运动方式这类选项做成大按钮平铺，不用下拉框 */
+.choices { display: flex; flex-wrap: wrap; gap: 10px; }
+.choice {
+  min-height: var(--tap);
+  padding: 0 20px;
+  border-radius: 12px;
+  border: 2px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--fs-base);
+  font-weight: 600;
+  cursor: pointer;
+}
+.choice.is-on {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: #fff;
+  font-weight: 700;
+}
+
+.field-error {
+  margin-top: 8px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--danger);
+}
+.field-hint { margin-top: 8px; font-size: var(--fs-sm); color: var(--muted); }
+
+/* 表单里实时显示的配速 */
+.derived {
+  margin-top: 10px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--brand-wash);
+  font-size: var(--fs-base);
+  color: var(--brand-ink);
+  font-weight: 600;
+}
+
+/* ---------- 保存成功 ---------- */
+.saved {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgba(255, 255, 255, .97);
+}
+.saved-check { width: 132px; height: 132px; }
+.saved-check circle {
+  fill: none;
+  stroke: var(--ok);
+  stroke-width: 5;
+  opacity: .3;
+}
+.saved-check path {
+  fill: none;
+  stroke: var(--ok);
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* 画勾动画，给一个明确的"完成了"信号 */
+  stroke-dasharray: 46;
+  stroke-dashoffset: 46;
+  animation: draw .42s .06s ease-out forwards;
+}
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.saved-text {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--ok);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .saved-check path { animation: none; stroke-dashoffset: 0; }
+}
+
+/* ---------- 确认对话框 ---------- */
+.dialog-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, .42);
+}
+.dialog {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px 20px 18px;
+}
+.dialog-text {
+  margin: 0 0 22px;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.5;
+}
+.dialog-btns { display: flex; gap: 12px; }
+.dialog-btns button { flex: 1; }
